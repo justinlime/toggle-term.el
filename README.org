@@ -1,0 +1,18 @@
+* Toggle Term
+
+Toggle term is inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]], it allows you spawn a persistent terminal or shell 
+at the bottom of the window, and swtich between them when needed.
+
+[[./assets/toggle-term.gif]]
+
+** Usage
+=Toggle-term= provides two main functions, =toggle-term-toggle= and =toggle-term-find=
+The former toggles the last-used spawned toggle-term, the ladder allows you to swtich 
+to other spawned toggle-terms, making it the last-used, or spawn a new one.
+
+If you want to have a present toggle-term for startup, you can add the follinwg to your config
+#+begin_src emacs-lisp
+(setq toggle-term-last-used '("init-toggle" . term))
+#+end_src
+This will ensure the first ivocation of =toggle-term-toggle= spawnes a =term= toggle, with the name of *"init-toggle"*, instead of prompting 
+the user for both name and type. 
