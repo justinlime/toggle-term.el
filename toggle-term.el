@@ -1,4 +1,4 @@
-;;; toggle-term.el Quickly toggle persistent term and shell buffers
+;;; toggle-term.el --- Quickly toggle persistent term and shell buffers  -*- lexical-binding:t -*-
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
@@ -24,23 +24,26 @@
 ;; Boston, MA 02111-1307, USA.
 ;;
 ;;; Commentary:
-;; quicky spawn persistent term and shell instances on the fly
-;; in an unobstructive way
+;; toggle-term.el allows you to quickly spawn persistent `term'
+;; and `shell' instances on the fly in an unobstructive way.
 ;;
 ;;; Code:
+
 (defgroup toggle-term nil
-  "Toggle a `term' or `shell'
-  buffer with customizable sizing and positioning"
+  "Toggle a `term' or `shell' buffer with customizable sizing and positioning."
   :prefix "toggle-term-"
   :group 'applications)
+
 (defcustom toggle-term-size 22
-  "Percentage of the window the buffer occupies"
+  "Percentage of the window that the toggle-term buffer occupies."
   :type 'fixnum
   :group 'toggle-term)
+
 (defvar toggle-term-active-toggles nil
-  "Active toggles spawned by toggle-term")
+  "Active toggles spawned by toggle-term.")
+
 (defvar toggle-term-last-used nil
-  "The current active toggle to be targeted by toggle-term-toggle")
+  "The current active toggle to be targeted by `toggle-term-toggle'.")
 
 (defun toggle-term--spawn (name wrapped type)
   (let* ((height (window-total-height))
@@ -65,8 +68,8 @@
 (defun toggle-term-find (&optional name type)
   "Toggle a buffer spawned by toggle-term, or create a new one.
 
-  if `NAME' is provided, set the buffers' name to the value, otherwise prompt for one
-  if `TYPE' is provided, set the buffers' type (term, shell) to the value, otherwise prompt for one"
+If NAME is provided, set the buffer's name to NAME, otherwise prompt for one.
+If TYPE is provided, set the buffer's type (term, shell) to TYPE, otherwise prompt for one."
   (interactive)
   (let* ((name (if name name (completing-read "Name of toggle: " (mapcar 'car toggle-term-active-toggles))))
          (unwrapped-name (replace-regexp-in-string "\\*" "" name))
@@ -87,9 +90,10 @@
           (toggle-term--spawn name wrapped type))))))
 
 (defun toggle-term-toggle ()
-  "Toggle the last used buffer spawned by toggle term
-   Invokes `toggle-term-find', and provides it with necessary aruguements, unless
-   `toggle-term-last-used' is nil, in which case prompt the user to choose a name and type"
+  "Toggle the last used buffer spawned by toggle-term.
+Invokes `toggle-term-find', and provides it with necessary arguments unless
+`toggle-term-last-used' is nil, in which case `toggle-term-find' will prompt
+the user to choose a name and type."
   (interactive)
   (if toggle-term-last-used
     (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
