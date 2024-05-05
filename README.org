@@ -1,3 +1,14 @@
+* Table Of Contents :toc_4:
+- [[#toggle-term][Toggle Term]]
+  - [[#installation][Installation]]
+    - [[#quelpa-use-package][Quelpa Use Package]]
+    - [[#quelpa][Quelpa]]
+  - [[#usage][Usage]]
+  - [[#customization][Customization]]
+    - [[#keybinds][Keybinds]]
+    - [[#variables][Variables]]
+      - [[#toggle-term-size][toggle-term-size]]
+
 * Toggle Term
 
 toggle-term.el is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
@@ -5,15 +16,46 @@ allowing you to spawn a persistent terminal or shell at the
 bottom of the frame and switch between them when needed.
 
 [[./assets/toggle-term.gif]]
-
-** Usage
-toggle-term.el provides two main functions, =toggle-term-toggle= and =toggle-term-find=.
-The former toggles the last-used spawned toggle-term, the latter allows you to switch
-to other spawned toggle-terms, making it the last-used, or by spawning a new one.
-
-If you want to have a present toggle-term for startup, you can add the following line to your init file
+** Installation
+*** Quelpa Use Package
 #+begin_src emacs-lisp
-(setq toggle-term-last-used '("init-toggle" . term))
+(use-package toggle-term
+  :quelpa (toggle-term :fetcher github :repo "justinlime/toggle-term.el"))
+#+end_src 
+*** Quelpa
+#+begin_src emacs-lisp
+(quelpa
+ '(toggle-term :fetcher github
+               :repo "justinlime/toggle-term.el"))
+#+end_src 
+** Usage
+toggle-term.el provides two main functions: 
+ + =toggle-term-toggle= - Toggles the =last-used= toggle 
+ + =toggle-term-find=  - Create or switch to another active toggle, making it the =last-used= 
+
+Supported Toggles Types:
+ + =term=
+ + =shell=
+ + =eshell=
+ + =ielm=
+
+** Customization
+*** Keybinds
+When settings keybinds for =toggle-term=, it may be useful to specify a toggle a predefined
+type, to do so, you can use these functions:
+#+begin_src emacs-lisp
+(toggle-term-find nil 'term)   ; Spawn a term toggle
+(toggle-term-find nil 'shell)  ; Spawn a shell toggle
+(toggle-term-find nil 'eshell) ; Spawn a eshell toggle
+(toggle-term-find nil 'ielm)   ; Spawn a ielm term toggle
 #+end_src
-This will ensure the first invocation of =toggle-term-toggle= spawns a =term= toggle,
-with the name of *"init-toggle"*, instead of prompting the user for both a name and type.
+
+*** Variables
+**** toggle-term-size
+This can be used to set the size, which is a percentage of the window the 
+toggle will occupy.
+
+This would set the toggle to occupy *25%* of the available window:
+#+begin_src emacs-lisp
+(setq toggle-term-size 25)
+#+end_src

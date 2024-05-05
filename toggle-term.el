@@ -3,7 +3,7 @@
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
 ;; Version: 0.0.1
-;; Keywords: toggle terminal term shell
+;; Keywords: toggle terminal term shell eshell ielm
 ;;
 ;;; License
 ;; This file is not part of GNU Emacs.
@@ -24,13 +24,13 @@
 ;; Boston, MA 02111-1307, USA.
 ;;
 ;;; Commentary:
-;; toggle-term.el allows you to quickly spawn persistent `term'
-;; and `shell' instances on the fly in an unobstructive way.
+;; toggle-term.el allows you to quickly spawn persistent `term',
+;; `shell', `eshell', or `ielm' instances on the fly in an unobstructive way.
 ;;
 ;;; Code:
 
 (defgroup toggle-term nil
-  "Toggle a `term' or `shell' buffer with customizable sizing and positioning."
+  "Toggle a `term', `shell', `eshell', or `ielm' buffer"
   :prefix "toggle-term-"
   :group 'applications)
 
@@ -76,7 +76,7 @@
   "Toggle a buffer spawned by toggle-term, or create a new one.
 
 If NAME is provided, set the buffer's name to NAME, otherwise prompt for one.
-If TYPE is provided, set the buffer's type (term, shell) to TYPE, otherwise prompt for one."
+If TYPE is provided, set the buffer's type (term, shell, eshell, ielm) to TYPE, otherwise prompt for one."
   (interactive)
   (let* ((name (if name name (completing-read "Name of toggle: " (mapcar 'car toggle-term-active-toggles))))
          (unwrapped-name (replace-regexp-in-string "\\*" "" name))
