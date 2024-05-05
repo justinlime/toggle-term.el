@@ -56,11 +56,18 @@
                  (make-term name (getenv "SHELL"))
                  (switch-to-buffer wrapped)))
             ((string= type 'shell)
-               (shell wrapped)))
+               (shell wrapped))
+            ((string= type 'ielm)
+               (ielm wrapped))
+            ((string= type 'eshell)
+               (eshell)
+               (setq-local eshell-buffer-name wrapped)))
           (if toggle-term-active-toggles
             (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
             (setq toggle-term-active-toggles `((,wrapped . ,type)))))))
-    (setq toggle-term-last-used `(,wrapped . ,type))))
+    (setq toggle-term-last-used `(,wrapped . ,type))
+    (unless (eq (buffer-name (current-buffer)) wrapped)
+      (rename-buffer wrapped))))
 
 (defun toggle-term-find (&optional name type)
   "Toggle a buffer spawned by toggle-term, or create a new one.
@@ -73,7 +80,7 @@
          (wrapped (format "*%s*" unwrapped-name))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " '(term shell))))))
+                               (completing-read "Type of toggle: " '(term eshell ielm shell))))))
 
     (let* ((last (car toggle-term-last-used))
            (win (get-buffer-window last)))
