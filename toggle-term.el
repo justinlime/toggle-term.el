@@ -3,7 +3,8 @@
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
 ;; Version: 0.0.1
-;; Keywords: toggle terminal term shell eshell ielm
+;; Keywords: frames convenience terminals
+;; Package-Requires: ((emacs "24.3"))
 ;;
 ;;; License
 ;; This file is not part of GNU Emacs.
@@ -55,9 +56,8 @@
         (progn
           (cond
             ((string= type 'term)
-               (progn 
                  (make-term name (getenv "SHELL"))
-                 (switch-to-buffer wrapped)))
+                 (switch-to-buffer wrapped))
             ((string= type 'shell)
                (shell wrapped))
             ((string= type 'ielm)
