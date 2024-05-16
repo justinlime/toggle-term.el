@@ -31,7 +31,7 @@
 ;;; Code:
 
 (defgroup toggle-term nil
-  "Toggle a `term', `shell', `eshell', or `ielm' buffer"
+  "Toggle a `term', `shell', `eshell', or `ielm' buffer."
   :prefix "toggle-term-"
   :group 'applications)
 
@@ -47,6 +47,10 @@
   "The current active toggle to be targeted by `toggle-term-toggle'.")
 
 (defun toggle-term--spawn (name wrapped type)
+  "Handles the spawning of a toggle.
+Argument NAME name of the toggle buffer.
+Argument WRAPPED the name, wrapped with asterisks.
+Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
          (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
     (select-window (split-root-window-below size))
@@ -108,4 +112,4 @@ the user to choose a name and type."
 
 (provide 'toggle-term)
 
-;;; toggle-term.el ends here
+;;; toggle-term.el ends here.
