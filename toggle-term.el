@@ -79,10 +79,13 @@ Argument TYPE type of toggle (term, shell, etc)."
 (defun toggle-term-find (&optional name type)
   "Toggle a buffer spawned by toggle-term, or create a new one.
 
-If NAME is provided, set the buffer's name to NAME, otherwise prompt for one.
-If TYPE is provided, set the buffer's type (term, shell, eshell, ielm) to TYPE, otherwise prompt for one."
+If NAME is provided, set the buffer's
+name to NAME, otherwise prompt for one.
+
+If TYPE is provided, set the buffer's type
+\(term, shell, eshell, ielm) to TYPE, otherwise prompt for one."
   (interactive)
-  (let* ((name (if name name (completing-read "Name of toggle: " (mapcar 'car toggle-term-active-toggles))))
+  (let* ((name (if name name (completing-read "Name of toggle: " (mapcar #'car toggle-term-active-toggles))))
          (unwrapped-name (replace-regexp-in-string "\\*" "" name))
          (wrapped (format "*%s*" unwrapped-name))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
