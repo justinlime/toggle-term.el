@@ -1,8 +1,9 @@
 * Table Of Contents :toc_4:
 - [[#toggle-term][Toggle Term]]
   - [[#installation][Installation]]
-    - [[#quelpa-use-package][Quelpa Use Package]]
+    - [[#melpa][Melpa]]
     - [[#quelpa][Quelpa]]
+      - [[#quelpa-use-package][Quelpa Use Package]]
   - [[#usage][Usage]]
   - [[#customization][Customization]]
     - [[#keybinds][Keybinds]]
@@ -17,16 +18,34 @@ bottom of the frame and switch between them when needed.
 
 [[./assets/toggle-term.gif]]
 ** Installation
-*** Quelpa Use Package
+*** Melpa
+As of 05/26/24 *toggle-term.el* is part of the MELPA
+
+Just add the following to your =init.el= if you already have 
+the MELPA added:
 #+begin_src emacs-lisp
 (use-package toggle-term
-  :quelpa (toggle-term :fetcher github :repo "justinlime/toggle-term.el"))
-#+end_src 
+  :bind (("M-o f" . toggle-term-find)
+         ("M-o o" . toggle-term-toggle))
+  :config
+    (setq toggle-term-size 25))
+#+end_src
 *** Quelpa
 #+begin_src emacs-lisp
 (quelpa
  '(toggle-term :fetcher github
                :repo "justinlime/toggle-term.el"))
+(setq toggle-term-size 25)
+(require 'toggle-term)
+#+end_src 
+**** Quelpa Use Package
+#+begin_src emacs-lisp
+(use-package toggle-term
+  :quelpa (toggle-term :fetcher github :repo "justinlime/toggle-term.el")
+  :bind (("M-o f" . toggle-term-find)
+         ("M-o o" . toggle-term-toggle))
+  :config
+    (setq toggle-term-size 25))
 #+end_src 
 ** Usage
 toggle-term.el provides two main functions: 
