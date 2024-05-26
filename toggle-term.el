@@ -113,6 +113,27 @@ the user to choose a name and type."
     (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
     (toggle-term-find)))
 
+;; Helpers
+(defun toggle-term-term ()
+  "Spawn a toggle-term term."
+  (interactive)
+  (toggle-term-find "toggle-term-term" 'term))
+
+(defun toggle-term-shell ()
+  "Spawn a toggle-term shell."
+  (interactive)
+  (toggle-term-find "toggle-term-shell" 'shell))
+
+(defun toggle-term-eshell()
+  "Spawn a toggle-term eshell."
+  (interactive)
+  (toggle-term-find "toggle-term-eshell" 'eshell))
+
+(defun toggle-term-ielm ()
+  "Spawn a toggle-term ielm."
+  (interactive)
+  (toggle-term-find "toggle-term-ielm" 'ielm))
+
 (provide 'toggle-term)
 
 ;;; toggle-term.el ends here.

@@ -5,27 +5,29 @@
     - [[#quelpa][Quelpa]]
       - [[#quelpa-use-package][Quelpa Use Package]]
   - [[#usage][Usage]]
-  - [[#customization][Customization]]
-    - [[#keybinds][Keybinds]]
+    - [[#functions][Functions]]
     - [[#variables][Variables]]
-      - [[#toggle-term-size][toggle-term-size]]
 
 * Toggle Term
 
-toggle-term.el is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
-allowing you to spawn a persistent terminal or shell at the
-bottom of the frame and switch between them when needed.
+=toggle-term.el= is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
+allowing you to spawn a persistent *terminal*, *shell*, *eshell*, or *ielm* 
+at the bottom of the frame and switch between them when needed.
 
 [[./assets/toggle-term.gif]]
 ** Installation
 *** Melpa
-As of 05/26/24 *toggle-term.el* is part of the MELPA
+*As of 05/26/24 toggle-term.el is part of the MELPA*
 
 Just add the following to your =init.el= if you already have 
-the MELPA added:
+the *MELPA* added:
 #+begin_src emacs-lisp
 (use-package toggle-term
   :bind (("M-o f" . toggle-term-find)
+         ("M-o t" . toggle-term-term)
+         ("M-o s" . toggle-term-shell)
+         ("M-o e" . toggle-term-eshell)
+         ("M-o i" . toggle-term-ielm)
          ("M-o o" . toggle-term-toggle))
   :config
     (setq toggle-term-size 25))
@@ -43,34 +45,27 @@ the MELPA added:
 (use-package toggle-term
   :quelpa (toggle-term :fetcher github :repo "justinlime/toggle-term.el")
   :bind (("M-o f" . toggle-term-find)
+         ("M-o t" . toggle-term-term)
+         ("M-o s" . toggle-term-shell)
+         ("M-o e" . toggle-term-eshell)
+         ("M-o i" . toggle-term-ielm)
          ("M-o o" . toggle-term-toggle))
   :config
     (setq toggle-term-size 25))
 #+end_src 
 ** Usage
-toggle-term.el provides two main functions: 
- + =toggle-term-toggle= - Toggles the =last-used= toggle 
- + =toggle-term-find=  - Create or switch to another active toggle, making it the =last-used= 
-
-Supported Toggles Types:
- + =term=
- + =shell=
- + =eshell=
- + =ielm=
-
-** Customization
-*** Keybinds
-When settings keybinds for =toggle-term=, it may be useful to specify a toggle a predefined
-type, to do so, you can use these functions:
-#+begin_src emacs-lisp
-(toggle-term-find nil 'term)   ; Spawn a term toggle
-(toggle-term-find nil 'shell)  ; Spawn a shell toggle
-(toggle-term-find nil 'eshell) ; Spawn a eshell toggle
-(toggle-term-find nil 'ielm)   ; Spawn a ielm term toggle
-#+end_src
+*** Functions
+Toggle-term provides the following main functions:
++ =toggle-term-find= :: Switch to an active toggle, or create a new one.
++ =toggle-term-toggle= :: Toggle the *last used* toggle.
++ =toggle-term-term= :: Toggle a *term*, named *toggle-term-term*
++ =toggle-term-shell= :: Toggle a *shell*, named *toggle-term-shell*
++ =toggle-term-eshell= :: Toggle an *eshell*, named *toggle-term-eshell*
++ =toggle-term-ielm= :: Toggle an *ielm*, named *toggle-term-ielm*
 
 *** Variables
-**** toggle-term-size
++ =toggle-term-size= ::
+
 This can be used to set the size, which is a percentage of the window the 
 toggle will occupy.
 
