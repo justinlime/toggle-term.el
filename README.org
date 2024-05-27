@@ -9,6 +9,7 @@
     - [[#variables][Variables]]
 
 * Toggle Term
+[[https://melpa.org/#/toggle-term][file:https://melpa.org/packages/toggle-term-badge.svg]]
 
 =toggle-term.el= is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
 allowing you to spawn a persistent *terminal*, *shell*, *eshell*, or *ielm* 
