@@ -77,10 +77,23 @@ This would set the toggle to occupy *25%* of the available window:
 #+begin_src emacs-lisp
 (setq toggle-term-size 25)
 #+end_src
+/NOTE: values too high, or too low, may cause unexpected behavior/
 + =toggle-term-switch-upon-toggle= ::
 
 Determines if the window created by toggle term should be switched to
 upon spawning:
 #+begin_src emacs-lisp
 (setq toggle-term-switch-upon-toggle t)
+#+end_src
++ =toggle-term-last-used= ::
+
+This variable is how toggle-term knows which toggle to summon/close
+when using =toggle-term-toggle=. You can set this variable before
+invoking the function to have a default startup toggle:
+#+begin_src emacs-lisp
+;; '("name-of-toggle" . type-of-toggle)
+(setq toggle-term-last-used '("my-terminal" . term))
+;; or
+(setq toggle-term-last-used '("my-shell" . shell))
+;; etc
 #+end_src
