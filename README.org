@@ -31,7 +31,8 @@ the *MELPA* added:
          ("M-o i" . toggle-term-ielm)
          ("M-o o" . toggle-term-toggle))
   :config
-    (setq toggle-term-size 25))
+    (setq toggle-term-size 25)
+    (setq toggle-term-switch-upon-toggle t))
 #+end_src
 *** Quelpa
 #+begin_src emacs-lisp
@@ -39,6 +40,7 @@ the *MELPA* added:
  '(toggle-term :fetcher github
                :repo "justinlime/toggle-term.el"))
 (setq toggle-term-size 25)
+(setq toggle-term-switch-upon-toggle t)
 (require 'toggle-term)
 #+end_src 
 **** Quelpa Use Package
@@ -52,7 +54,8 @@ the *MELPA* added:
          ("M-o i" . toggle-term-ielm)
          ("M-o o" . toggle-term-toggle))
   :config
-    (setq toggle-term-size 25))
+    (setq toggle-term-size 25)
+    (setq toggle-term-switch-upon-toggle t))
 #+end_src 
 ** Usage
 *** Functions
@@ -73,4 +76,11 @@ toggle will occupy.
 This would set the toggle to occupy *25%* of the available window:
 #+begin_src emacs-lisp
 (setq toggle-term-size 25)
+#+end_src
++ =toggle-term-switch-upon-toggle= ::
+
+Determines if the window created by toggle term should be switched to
+upon spawning:
+#+begin_src emacs-lisp
+(setq toggle-term-switch-upon-toggle t)
 #+end_src

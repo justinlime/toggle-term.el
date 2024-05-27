@@ -40,6 +40,11 @@
   :type 'fixnum
   :group 'toggle-term)
 
+(defcustom toggle-term-switch-upon-toggle t
+  "Whether or not to switch to the buffer upon toggle."
+  :type 'boolean
+  :group 'toggle-term)
+
 (defvar toggle-term-active-toggles nil
   "Active toggles spawned by toggle-term.")
 
@@ -52,6 +57,7 @@ Argument NAME name of the toggle buffer.
 Argument WRAPPED the name, wrapped with asterisks.
 Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
+         (current (selected-window))
          (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
     (select-window (split-root-window-below size))
     (dolist (buf (buffer-list))
@@ -74,7 +80,8 @@ Argument TYPE type of toggle (term, shell, etc)."
             (setq toggle-term-active-toggles `((,wrapped . ,type)))))))
     (setq toggle-term-last-used `(,wrapped . ,type))
     (unless (eq (buffer-name (current-buffer)) wrapped)
-      (rename-buffer wrapped))))
+      (rename-buffer wrapped))
+    (unless toggle-term-switch-upon-toggle (select-window current))))
 
 (defun toggle-term-find (&optional name type)
   "Toggle a buffer spawned by toggle-term, or create a new one.
