@@ -6,13 +6,14 @@
       - [[#quelpa-use-package][Quelpa Use Package]]
   - [[#usage][Usage]]
     - [[#functions][Functions]]
+    - [[#helper-functions][Helper Functions]]
     - [[#variables][Variables]]
 
 * Toggle Term
 [[https://melpa.org/#/toggle-term][file:https://melpa.org/packages/toggle-term-badge.svg]]
 
 =toggle-term.el= is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
-allowing you to spawn a persistent *term*, *vterm*, *shell*, *eshell*, or *ielm* 
+allowing you to spawn a persistent =term=, =vterm=, =shell=, =eshell=, or =ielm= 
 at the bottom of the frame and switch between them when needed.
 
 [[./assets/toggle-term.gif]]
@@ -64,8 +65,8 @@ the *MELPA* added:
 Toggle-term provides the following main functions:
 + =toggle-term-find= :: Switch to an active toggle, or create a new one.
 + =toggle-term-toggle= :: Toggle the *last used* toggle.
-
-And the following helper functions:
+*** Helper Functions
+The follwing helper functions are included for use with keybinds:
 + =toggle-term-term= :: Toggle a *term*, named *toggle-term-term*
 + =toggle-term-vterm= :: Toggle a *term*, named *toggle-term-vterm*
 + =toggle-term-shell= :: Toggle a *shell*, named *toggle-term-shell*
