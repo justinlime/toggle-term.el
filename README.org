@@ -12,7 +12,7 @@
 [[https://melpa.org/#/toggle-term][file:https://melpa.org/packages/toggle-term-badge.svg]]
 
 =toggle-term.el= is an Emacs package inspired by [[https://github.com/akinsho/toggleterm.nvim][toggleterm.nvim]],
-allowing you to spawn a persistent *terminal*, *shell*, *eshell*, or *ielm* 
+allowing you to spawn a persistent *term*, *vterm*, *shell*, *eshell*, or *ielm* 
 at the bottom of the frame and switch between them when needed.
 
 [[./assets/toggle-term.gif]]
@@ -26,6 +26,7 @@ the *MELPA* added:
 (use-package toggle-term
   :bind (("M-o f" . toggle-term-find)
          ("M-o t" . toggle-term-term)
+         ("M-o v" . toggle-term-vterm)
          ("M-o s" . toggle-term-shell)
          ("M-o e" . toggle-term-eshell)
          ("M-o i" . toggle-term-ielm)
@@ -49,6 +50,7 @@ the *MELPA* added:
   :quelpa (toggle-term :fetcher github :repo "justinlime/toggle-term.el")
   :bind (("M-o f" . toggle-term-find)
          ("M-o t" . toggle-term-term)
+         ("M-o v" . toggle-term-vterm)
          ("M-o s" . toggle-term-shell)
          ("M-o e" . toggle-term-eshell)
          ("M-o i" . toggle-term-ielm)
@@ -62,7 +64,10 @@ the *MELPA* added:
 Toggle-term provides the following main functions:
 + =toggle-term-find= :: Switch to an active toggle, or create a new one.
 + =toggle-term-toggle= :: Toggle the *last used* toggle.
+
+And the following helper functions:
 + =toggle-term-term= :: Toggle a *term*, named *toggle-term-term*
++ =toggle-term-vterm= :: Toggle a *term*, named *toggle-term-vterm*
 + =toggle-term-shell= :: Toggle a *shell*, named *toggle-term-shell*
 + =toggle-term-eshell= :: Toggle an *eshell*, named *toggle-term-eshell*
 + =toggle-term-ielm= :: Toggle an *ielm*, named *toggle-term-ielm*

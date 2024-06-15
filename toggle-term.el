@@ -25,13 +25,13 @@
 ;; Boston, MA 02111-1307, USA.
 ;;
 ;;; Commentary:
-;; toggle-term.el allows you to quickly spawn persistent `term',
+;; toggle-term.el allows you to quickly spawn persistent `term', `vterm',
 ;; `shell', `eshell', or `ielm' instances on the fly in an unobstructive way.
 ;;
 ;;; Code:
 
 (defgroup toggle-term nil
-  "Toggle a `term', `shell', `eshell', or `ielm' buffer."
+  "Toggle a `term', `vterm',`shell', `eshell', or `ielm' buffer."
   :prefix "toggle-term-"
   :group 'applications)
 
@@ -59,27 +59,30 @@ Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
          (current (selected-window))
          (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
+
     (select-window (split-root-window-below size))
-    (dolist (buf (buffer-list))
-      (if (string= (buffer-name buf) wrapped)
-        (switch-to-buffer wrapped)
-        (progn
-          (cond
-            ((string= type 'term)
-                 (make-term name (getenv "SHELL"))
-                 (switch-to-buffer wrapped))
-            ((string= type 'shell)
-               (shell wrapped))
-            ((string= type 'ielm)
-               (ielm wrapped))
-            ((string= type 'eshell)
-               (eshell)
-               (setq-local eshell-buffer-name wrapped)))
-          (if toggle-term-active-toggles
-            (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
-            (setq toggle-term-active-toggles `((,wrapped . ,type)))))))
+    (if (member wrapped (mapcar #'(lambda (buf) (buffer-name buf)) (buffer-list)))
+      (switch-to-buffer wrapped)
+      (progn
+        (cond
+          ((string= type 'term)
+             (make-term name (getenv "SHELL"))
+             (switch-to-buffer wrapped))
+          ((string= type 'vterm)
+             (vterm))
+          ((string= type 'shell)
+             (shell wrapped))
+          ((string= type 'ielm)
+             (ielm wrapped))
+          ((string= type 'eshell)
+             (eshell)
+             (setq-local eshell-buffer-name wrapped)))
+        (if toggle-term-active-toggles
+          (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
+          (setq toggle-term-active-toggles `((,wrapped . ,type))))))
     (setq toggle-term-last-used `(,wrapped . ,type))
-    (unless (eq (buffer-name (current-buffer)) wrapped)
+    ;; Ensure the buffer is renamed properly
+    (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
     (unless toggle-term-switch-upon-toggle (select-window current))))
 
@@ -97,7 +100,7 @@ If TYPE is provided, set the buffer's type
          (wrapped (format "*%s*" unwrapped-name))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " '(term eshell ielm shell))))))
+                               (completing-read "Type of toggle: " '(term vterm eshell ielm shell))))))
 
     (let* ((last (car toggle-term-last-used))
            (win (get-buffer-window last)))
@@ -125,6 +128,11 @@ the user to choose a name and type."
   "Spawn a toggle-term term."
   (interactive)
   (toggle-term-find "toggle-term-term" 'term))
+
+(defun toggle-term-vterm ()
+  "Spawn a toggle-term vterm."
+  (interactive)
+  (toggle-term-find "toggle-term-vterm" 'vterm))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
