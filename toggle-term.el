@@ -61,7 +61,7 @@ Argument TYPE type of toggle (term, shell, etc)."
          (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
 
     (select-window (split-root-window-below size))
-    (if (member wrapped (mapcar #'(lambda (buf) (buffer-name buf)) (buffer-list)))
+    (if (member wrapped (mapcar #'buffer-name (buffer-list)))
       (switch-to-buffer wrapped)
       (progn
         (cond
