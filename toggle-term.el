@@ -100,7 +100,7 @@ If TYPE is provided, set the buffer's type
          (wrapped (format "*%s*" unwrapped-name))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " '(term vterm eshell ielm shell))))))
+                               (completing-read "Type of toggle: " '(term vterm eshell ielm shell) nil t)))))
 
     (let* ((last (car toggle-term-last-used))
            (win (get-buffer-window last)))
