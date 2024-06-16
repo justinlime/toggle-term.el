@@ -51,7 +51,7 @@
 (defvar toggle-term-last-used nil
   "The current active toggle to be targeted by `toggle-term-toggle'.")
 
-(defun toggle-term--spawn (name wrapped type)
+(defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
 Argument NAME name of the toggle buffer.
 Argument WRAPPED the name, wrapped with asterisks.
@@ -63,23 +63,22 @@ Argument TYPE type of toggle (term, shell, etc)."
     (select-window (split-root-window-below size))
     (if (member wrapped (mapcar #'buffer-name (buffer-list)))
       (switch-to-buffer wrapped)
-      (progn
-        (cond
-          ((string= type 'term)
-             (make-term name (getenv "SHELL"))
-             (switch-to-buffer wrapped))
-          ((string= type 'vterm)
-             (vterm))
-          ((string= type 'shell)
-             (shell wrapped))
-          ((string= type 'ielm)
-             (ielm wrapped))
-          ((string= type 'eshell)
-             (eshell)
-             (setq-local eshell-buffer-name wrapped)))
-        (if toggle-term-active-toggles
-          (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
-          (setq toggle-term-active-toggles `((,wrapped . ,type))))))
+      (cond
+        ((string= type 'term)
+           ;; `make-term' doesn't switch to the buffer automatically
+           (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
+        ((string= type 'vterm)
+           (vterm))
+        ((string= type 'shell)
+           (shell wrapped))
+        ((string= type 'ielm)
+           (ielm wrapped))
+        ((string= type 'eshell)
+           (eshell)
+           (setq-local eshell-buffer-name wrapped)))
+      (if toggle-term-active-toggles
+        (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
+        (setq toggle-term-active-toggles `((,wrapped . ,type)))))
     (setq toggle-term-last-used `(,wrapped . ,type))
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
@@ -92,26 +91,23 @@ Argument TYPE type of toggle (term, shell, etc)."
 If NAME is provided, set the buffer's
 name to NAME, otherwise prompt for one.
 
-If TYPE is provided, set the buffer's type
-\(term, shell, eshell, ielm) to TYPE, otherwise prompt for one."
+If TYPE is provided, set the buffer's type (term, vterm, shell, eshell, ielm)
+to TYPE, otherwise prompt for one."
   (interactive)
   (let* ((name (if name name (completing-read "Name of toggle: " (mapcar #'car toggle-term-active-toggles))))
-         (unwrapped-name (replace-regexp-in-string "\\*" "" name))
-         (wrapped (format "*%s*" unwrapped-name))
+         (last (car toggle-term-last-used))
+         (win (get-buffer-window last))
+         (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
                                (completing-read "Type of toggle: " '(term vterm eshell ielm shell) nil t)))))
 
-    (let* ((last (car toggle-term-last-used))
-           (win (get-buffer-window last)))
-      (if (not last)
-        (toggle-term--spawn name wrapped type)
-        (if win
-          (progn
-            (delete-window win)
-            (unless (string= last wrapped)
-             (toggle-term--spawn name wrapped type)))
-          (toggle-term--spawn name wrapped type))))))
+    (if (or (not last)
+            (not win))
+        (toggle-term--spawn wrapped type)
+        (when win (delete-window win))
+        (unless (string= last wrapped)
+          (toggle-term--spawn wrapped type)))))
 
 (defun toggle-term-toggle ()
   "Toggle the last used buffer spawned by toggle-term.
