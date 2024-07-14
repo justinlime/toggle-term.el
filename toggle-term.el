@@ -26,12 +26,13 @@
 ;;
 ;;; Commentary:
 ;; toggle-term.el allows you to quickly spawn persistent `term', `vterm',
-;; `shell', `eshell', or `ielm' instances on the fly in an unobstructive way.
+;; `eat', `shell', `eshell', or `ielm' instances on the fly in an
+;; unobstructive way.
 ;;
 ;;; Code:
 
 (defgroup toggle-term nil
-  "Toggle a `term', `vterm',`shell', `eshell', or `ielm' buffer."
+  "Toggle a `term', `vterm', `eat', `shell', `eshell', or `ielm' buffer."
   :prefix "toggle-term-"
   :group 'applications)
 
@@ -69,6 +70,8 @@ Argument TYPE type of toggle (term, shell, etc)."
            (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
         ((string= type 'vterm)
            (vterm))
+        ((string= type 'eat)
+           (set-buffer (eat)))
         ((string= type 'shell)
            (shell wrapped))
         ((string= type 'ielm)
@@ -100,7 +103,7 @@ to TYPE, otherwise prompt for one."
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " '(term vterm eshell ielm shell) nil t)))))
+                               (completing-read "Type of toggle: " '(term vterm eat eshell ielm shell) nil t)))))
 
     (if (or (not last)
             (not win))
@@ -129,6 +132,11 @@ the user to choose a name and type."
   "Spawn a toggle-term vterm."
   (interactive)
   (toggle-term-find "toggle-term-vterm" 'vterm))
+
+(defun toggle-term-eat ()
+  "Spawn a toggle-term eat."
+  (interactive)
+  (toggle-term-find "toggle-term-eat" 'eat))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
