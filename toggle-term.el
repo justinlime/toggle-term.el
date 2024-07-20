@@ -101,9 +101,10 @@ to TYPE, otherwise prompt for one."
          (last (car toggle-term-last-used))
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
+         (type-options (delete nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " '(term vterm eat eshell ielm shell) nil t)))))
+                               (completing-read "Type of toggle: " type-options nil t)))))
 
     (if (or (not last)
             (not win))
@@ -131,19 +132,23 @@ the user to choose a name and type."
 (defun toggle-term-vterm ()
   "Spawn a toggle-term vterm."
   (interactive)
-  (toggle-term-find "toggle-term-vterm" 'vterm))
+  (if (fboundp 'vterm)
+      (toggle-term-find "toggle-term-vterm" 'vterm)
+      (message "Vterm not found")))
 
 (defun toggle-term-eat ()
   "Spawn a toggle-term eat."
   (interactive)
-  (toggle-term-find "toggle-term-eat" 'eat))
+  (if (fboundp 'eat)
+      (toggle-term-find "toggle-term-eat" 'eat)
+      (message "Eat not found")))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
   (interactive)
   (toggle-term-find "toggle-term-shell" 'shell))
 
-(defun toggle-term-eshell()
+(defun toggle-term-eshell ()
   "Spawn a toggle-term eshell."
   (interactive)
   (toggle-term-find "toggle-term-eshell" 'eshell))
