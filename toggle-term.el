@@ -46,11 +46,17 @@
   :type 'boolean
   :group 'toggle-term)
 
+(defcustom toggle-term-use-perspective (when (require 'perspective nil 'noerror) t)
+  "Whether or not to integrate with perspective.el."
+  :type 'boolean
+  :group 'toggle-term)
+
 (defvar toggle-term-active-toggles nil
   "Active toggles spawned by toggle-term.")
 
 (defvar toggle-term-last-used nil
   "The current active toggle to be targeted by `toggle-term-toggle'.")
+
 
 (defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
@@ -86,23 +92,27 @@ Argument TYPE type of toggle (term, shell, etc)."
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
+    (when toggle-term-use-perspective
+      (persp-set-buffer wrapped))
     (unless toggle-term-switch-upon-toggle (select-window current))))
 
 (defun toggle-term-find (&optional name type)
-  "Toggle a buffer spawned by toggle-term, or create a new one.
+  "Toggle a toggle-term buffer, or create a new one.
 
 If NAME is provided, set the buffer's
 name to NAME, otherwise prompt for one.
 
-If TYPE is provided, set the buffer's type (term, vterm, shell, eshell, ielm)
+If TYPE is provided, set the buffer's type
+\(term, vterm, shell, eshell, ielm, eat)
 to TYPE, otherwise prompt for one."
   (interactive)
   (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
-           (when (member (car buf) (mapcar #'car toggle-term-active-toggles)) (car buf))))))
+           (when (and (member (car buf) (mapcar #'car toggle-term-active-toggles)))
+                      (if toggle-term-use-perspective (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
          (last (car toggle-term-last-used))
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
-         (type-options (delete nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
+         (type-options (delq nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
          (type (if type type (if (assoc wrapped toggle-term-active-toggles)
                                (cdr (assoc wrapped toggle-term-active-toggles))
                                (completing-read "Type of toggle: " type-options nil t)))))
