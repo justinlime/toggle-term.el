@@ -31,7 +31,7 @@
 ;;
 ;;; Code:
 
-(require 'perspective)
+(require 'perspective nil 'noerror)
 
 (defgroup toggle-term nil
   "Toggle a `term', `vterm', `eat', `shell', `eshell', or `ielm' buffer."
@@ -48,7 +48,7 @@
   :type 'boolean
   :group 'toggle-term)
 
-(defcustom toggle-term-use-perspective (when (require 'perspective nil 'noerror) (require 'perspective))
+(defcustom toggle-term-use-perspective (when (featurep 'perspective) t)
   "Whether or not to integrate with perspective.el."
   :type 'boolean
   :group 'toggle-term)
