@@ -97,7 +97,8 @@ name to NAME, otherwise prompt for one.
 If TYPE is provided, set the buffer's type (term, vterm, shell, eshell, ielm)
 to TYPE, otherwise prompt for one."
   (interactive)
-  (let* ((name (if name name (completing-read "Name of toggle: " (mapcar #'car toggle-term-active-toggles))))
+  (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
+           (when (member (car buf) (mapcar #'car toggle-term-active-toggles)) (car buf))))))
          (last (car toggle-term-last-used))
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
