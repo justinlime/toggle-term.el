@@ -30,8 +30,11 @@
 ;; unobstructive way.
 ;;
 ;;; Code:
-
+                                        ;
+;; Optional integrations
 (require 'perspective nil 'noerror)
+(require 'eat nil 'noerror)
+(require 'vterm nil 'noerror)
 
 (defgroup toggle-term nil
   "Toggle a `term', `vterm', `eat', `shell', `eshell', or `ielm' buffer."
@@ -145,14 +148,14 @@ the user to choose a name and type."
 (defun toggle-term-vterm ()
   "Spawn a toggle-term vterm."
   (interactive)
-  (if (fboundp 'vterm)
+  (if (featurep 'vterm)
       (toggle-term-find "toggle-term-vterm" 'vterm)
       (message "Vterm not found")))
 
 (defun toggle-term-eat ()
   "Spawn a toggle-term eat."
   (interactive)
-  (if (fboundp 'eat)
+  (if (featurep 'eat)
       (toggle-term-find "toggle-term-eat" 'eat)
       (message "Eat not found")))
 
