@@ -1,4 +1,4 @@
-;;; toggle-term.el --- Quickly toggle persistent term and shell buffers  -*- lexical-binding:t -*-
+;;; Toggle-Term.el --- Quickly toggle persistent term and shell buffers  -*- lexical-binding:t -*-
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
@@ -74,7 +74,10 @@ Argument TYPE type of toggle (term, shell, etc)."
 
     (select-window (split-root-window-below size))
     (if (member wrapped (mapcar #'buffer-name (buffer-list)))
-      (switch-to-buffer wrapped)
+      (progn
+        (switch-to-buffer wrapped)
+        (when toggle-term-use-perspective
+          (persp-set-buffer wrapped)))
       (cond
         ((string= type 'term)
            ;; `make-term' doesn't switch to the buffer automatically
@@ -93,7 +96,16 @@ Argument TYPE type of toggle (term, shell, etc)."
       (if toggle-term-active-toggles
         (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
         (setq toggle-term-active-toggles `((,wrapped . ,type)))))
-    (setq toggle-term-last-used `(,wrapped . ,type))
+    (if toggle-term-last-used
+      (progn
+        (setcdr (assoc 'type toggle-term-last-used) type)
+        (setcdr (assoc 'name toggle-term-last-used) wrapped)
+        (when toggle-term-use-perspective
+          (setcdr (assoc 'persp toggle-term-last-used) (persp-current-name))))
+      (setq toggle-term-last-used `((name . ,wrapped)
+                                    (type . ,type)
+                                    (persp . ,(when toggle-term-use-perspective (persp-current-name))))))
+    ;; (setq toggle-term-last-used `(,wrapped . ,type))
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
@@ -114,17 +126,21 @@ to TYPE, otherwise prompt for one."
   (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (and (member (car buf) (mapcar #'car toggle-term-active-toggles)))
                       (if toggle-term-use-perspective (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
-         (last (car toggle-term-last-used))
+         (last (alist-get 'name toggle-term-last-used))
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
          (type-options (delq nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
-         (type (if type type (if (assoc wrapped toggle-term-active-toggles)
+         ;; (type (if type type (if (assoc wrapped toggle-term-active-toggles)
+         ;;                       (cdr (assoc wrapped toggle-term-active-toggles))
+         ;;                       (completing-read "Type of toggle: " type-options nil t)))))
+         (type (if type type (if (cdr (assoc wrapped toggle-term-active-toggles))
                                (cdr (assoc wrapped toggle-term-active-toggles))
                                (completing-read "Type of toggle: " type-options nil t)))))
 
     (if (or (not last)
             (not win))
         (toggle-term--spawn wrapped type)
+        ;; (when win (delete-window win))
         (when win (delete-window win))
         (unless (string= last wrapped)
           (toggle-term--spawn wrapped type)))))
@@ -136,7 +152,13 @@ Invokes `toggle-term-find', and provides it with necessary arguments unless
 the user to choose a name and type."
   (interactive)
   (if toggle-term-last-used
-    (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
+    (progn
+      (if toggle-term-use-perspective
+        (if (string= (persp-current-name) (alist-get 'persp toggle-term-last-used))
+          (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))
+          (toggle-term-find))
+        (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))))
+    ;; (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
     (toggle-term-find)))
 
 ;; Helpers
