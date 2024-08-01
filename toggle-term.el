@@ -65,7 +65,6 @@
 
 (defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
-Argument NAME name of the toggle buffer.
 Argument WRAPPED the name, wrapped with asterisks.
 Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
@@ -123,6 +122,8 @@ If TYPE is provided, set the buffer's type
 \(term, vterm, shell, eshell, ielm, eat)
 to TYPE, otherwise prompt for one."
   (interactive)
+  ;; TODO: Simplify this a bit, combine the name and wrapped let statements
+  ;; TODO: Add -$persp-name for perspective integration
   (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (and (member (car buf) (mapcar #'car toggle-term-active-toggles)))
                       (if toggle-term-use-perspective (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
@@ -130,9 +131,6 @@ to TYPE, otherwise prompt for one."
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
          (type-options (delq nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
-         ;; (type (if type type (if (assoc wrapped toggle-term-active-toggles)
-         ;;                       (cdr (assoc wrapped toggle-term-active-toggles))
-         ;;                       (completing-read "Type of toggle: " type-options nil t)))))
          (type (if type type (if (cdr (assoc wrapped toggle-term-active-toggles))
                                (cdr (assoc wrapped toggle-term-active-toggles))
                                (completing-read "Type of toggle: " type-options nil t)))))
