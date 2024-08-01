@@ -104,7 +104,6 @@ Argument TYPE type of toggle (term, shell, etc)."
       (setq toggle-term-last-used `((name . ,wrapped)
                                     (type . ,type)
                                     (persp . ,(when toggle-term-use-perspective (persp-current-name))))))
-    ;; (setq toggle-term-last-used `(,wrapped . ,type))
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
@@ -138,7 +137,6 @@ to TYPE, otherwise prompt for one."
     (if (or (not last)
             (not win))
         (toggle-term--spawn wrapped type)
-        ;; (when win (delete-window win))
         (when win (delete-window win))
         (unless (string= last wrapped)
           (toggle-term--spawn wrapped type)))))
@@ -156,7 +154,6 @@ the user to choose a name and type."
           (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))
           (toggle-term-find))
         (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))))
-    ;; (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
     (toggle-term-find)))
 
 ;; Helpers
