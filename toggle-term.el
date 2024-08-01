@@ -1,10 +1,10 @@
-;;; Toggle-Term.el --- Quickly toggle persistent term and shell buffers  -*- lexical-binding:t -*-
+;;; toggle-term.el --- Quickly toggle persistent term and shell buffers  -*- lexical-binding:t -*-
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
-;; Version: 0.0.1
+;; Version: 1.1
 ;; Keywords: frames convenience terminals
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "25.1"))
 ;;
 ;;; License
 ;; This file is not part of GNU Emacs.
@@ -30,7 +30,7 @@
 ;; unobstructive way.
 ;;
 ;;; Code:
-                                        ;
+
 ;; Optional integrations
 (require 'perspective nil 'noerror)
 (require 'eat nil 'noerror)
