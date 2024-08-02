@@ -130,16 +130,16 @@ to TYPE, otherwise prompt for one."
                         (format "*%s-%s*" name (persp-current-name))
                         (format "*%s*" name))))
          (last-used (alist-get 'name toggle-term--last-used))
-         (win (get-buffer-window last-used))
+         (windows (delq nil (mapcar #'(lambda (tog) (get-buffer-window (car tog))) toggle-term--active-toggles)))
          (type (or type (or (cdr (assoc wrapped toggle-term--active-toggles))
                             (completing-read "Type of toggle: "
                               (delq nil (mapcar #'(lambda (type)
                                (when (fboundp type) type)) '(term vterm eat eshell ielm shell))) nil t)))))
 
     (if (or (not last-used)
-            (not win))
+            (not windows))
         (toggle-term--spawn wrapped type)
-        (when win (delete-window win))
+        (mapcar #'delete-window windows)
         (unless (string= last-used wrapped)
           (toggle-term--spawn wrapped type)))))
 
