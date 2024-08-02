@@ -123,14 +123,14 @@ to TYPE, otherwise prompt for one."
   (interactive)
   ;; TODO: Simplify this a bit, combine the name and wrapped let statements
   ;; TODO: Add -$persp-name for perspective integration
-  (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
+  (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (and (member (car buf) (mapcar #'car toggle-term-active-toggles)))
                       (if toggle-term-use-perspective (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
          (last (alist-get 'name toggle-term-last-used))
          (win (get-buffer-window last))
          (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
          (type-options (delq nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
-         (type (if type type (if (cdr (assoc wrapped toggle-term-active-toggles))
+         (type (or type (if (cdr (assoc wrapped toggle-term-active-toggles))
                                (cdr (assoc wrapped toggle-term-active-toggles))
                                (completing-read "Type of toggle: " type-options nil t)))))
 
