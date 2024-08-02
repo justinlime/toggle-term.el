@@ -121,24 +121,27 @@ If TYPE is provided, set the buffer's type
 \(term, vterm, shell, eshell, ielm, eat)
 to TYPE, otherwise prompt for one."
   (interactive)
-  ;; TODO: Simplify this a bit, combine the name and wrapped let statements
-  ;; TODO: Add -$persp-name for perspective integration
   (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (and (member (car buf) (mapcar #'car toggle-term-active-toggles)))
-                      (if toggle-term-use-perspective (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
-         (last (alist-get 'name toggle-term-last-used))
-         (win (get-buffer-window last))
-         (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
-         (type-options (delq nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
-         (type (or type (if (cdr (assoc wrapped toggle-term-active-toggles))
-                               (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " type-options nil t)))))
+                 (if toggle-term-use-perspective
+                   (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
+         (wrapped (if (member name (mapcar #'car toggle-term-active-toggles))
+                      name
+                      (if toggle-term-use-perspective
+                        (format "*%s-%s*" name (persp-current-name))
+                        (format "*%s*" name))))
+         (last-used (alist-get 'name toggle-term-last-used))
+         (win (get-buffer-window last-used))
+         (type (or type (or (cdr (assoc wrapped toggle-term-active-toggles))
+                            (completing-read "Type of toggle: "
+                              (delq nil (mapcar #'(lambda (type)
+                               (when (fboundp type) type)) '(term vterm eat eshell ielm shell))) nil t)))))
 
-    (if (or (not last)
+    (if (or (not last-used)
             (not win))
         (toggle-term--spawn wrapped type)
         (when win (delete-window win))
-        (unless (string= last wrapped)
+        (unless (string= last-used wrapped)
           (toggle-term--spawn wrapped type)))))
 
 (defun toggle-term-toggle ()
@@ -148,12 +151,14 @@ Invokes `toggle-term-find', and provides it with necessary arguments unless
 the user to choose a name and type."
   (interactive)
   (if toggle-term-last-used
-    (progn
+    (let ((name (alist-get 'name toggle-term-last-used))
+          (type (alist-get 'type toggle-term-last-used))
+          (persp (alist-get 'persp toggle-term-last-used)))
       (if toggle-term-use-perspective
-        (if (string= (persp-current-name) (alist-get 'persp toggle-term-last-used))
-          (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))
+        (if (string= (persp-current-name) persp)
+          (toggle-term-find name type)
           (toggle-term-find))
-        (toggle-term-find (alist-get 'name toggle-term-last-used) (alist-get 'type toggle-term-last-used))))
+        (toggle-term-find name type)))
     (toggle-term-find)))
 
 ;; Helpers
