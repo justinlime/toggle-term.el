@@ -46,13 +46,10 @@
   :type 'boolean
   :group 'toggle-term)
 
-	(defcustom toggle-term-use-persp nil
-		"Whether or not to integrate with perspective.el."
-		:type 'boolean
-		:group 'toggle-term)
-
-(with-eval-after-load 'perspective
-	(setq toggle-term-use-persp t))
+(defcustom toggle-term-use-persp (when (and (boundp persp-mode) (eq persp-mode t)) t)
+  "Whether or not to integrate with perspective.el."
+  :type 'boolean
+  :group 'toggle-term)
 
 (defvar toggle-term--active-toggles nil
   "Active toggles spawned by toggle-term.")
