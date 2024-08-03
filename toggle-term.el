@@ -145,7 +145,7 @@ otherwise prompt for one."
   (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (member (car buf) (mapcar #'car toggle-term--active-toggles))
                  (if toggle-term-use-persp
-                   (when (member (get-buffer (car buf)) (persp-current-buffers)) t) t))))))
+                   (when (member (get-buffer (car buf)) (persp-buffers (persp-curr))) t) t))))))
          (wrapped (if (member name (mapcar #'car toggle-term--active-toggles))
                       name
                       (if toggle-term-use-persp
