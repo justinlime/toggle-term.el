@@ -31,11 +31,6 @@
 ;;
 ;;; Code:
 
-;; Optional integrations
-(require 'perspective nil 'noerror)
-(require 'eat nil 'noerror)
-(require 'vterm nil 'noerror)
-
 (defgroup toggle-term nil
   "Toggle a `term', `vterm', `eat', `shell', `eshell', or `ielm' buffer."
   :prefix "toggle-term-"
@@ -51,10 +46,13 @@
   :type 'boolean
   :group 'toggle-term)
 
-(defcustom toggle-term-use-persp (when (featurep 'perspective) t)
-  "Whether or not to integrate with perspective.el."
-  :type 'boolean
-  :group 'toggle-term)
+	(defcustom toggle-term-use-persp nil
+		"Whether or not to integrate with perspective.el."
+		:type 'boolean
+		:group 'toggle-term)
+
+(with-eval-after-load 'perspective
+	(setq toggle-term-use-persp t))
 
 (defvar toggle-term--active-toggles nil
   "Active toggles spawned by toggle-term.")
@@ -114,21 +112,13 @@ Argument TYPE type of toggle (term, shell, etc)."
         (when toggle-term-use-persp
           (persp-set-buffer wrapped))
         (run-hooks 'toggle-term-spawn-hook))
-      (cond
-        ((string= type 'term)
-           ;; `make-term' doesn't switch to the buffer automatically
-           (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
-        ((string= type 'vterm)
-           (vterm))
-        ((string= type 'eat)
-           (set-buffer (eat)))
-        ((string= type 'shell)
-           (shell wrapped))
-        ((string= type 'ielm)
-           (ielm wrapped))
-        ((string= type 'eshell)
-           (eshell)
-           (setq-local eshell-buffer-name wrapped))))
+			(pcase type
+				("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
+				("vterm" (vterm))
+				("eat" (set-buffer (eat)))
+				("shell" (shell wrapped))
+				("ielm" (ielm wrapped))
+				("eshell" (eshell) (setq-local eshell-buffer-name wrapped))))
     (toggle-term--set-last-used wrapped type)
     ;; ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
@@ -197,19 +187,17 @@ the user to choose a name and type."
   (interactive)
   (toggle-term-find "toggle-term-term" 'term))
 
-(defun toggle-term-vterm ()
-  "Spawn a toggle-term vterm."
-  (interactive)
-  (if (featurep 'vterm)
-      (toggle-term-find "toggle-term-vterm" 'vterm)
-      (message "Vterm not found")))
+(with-eval-after-load 'vterm
+	(defun toggle-term-vterm ()
+		"Spawn a toggle-term vterm."
+		(interactive)
+		(toggle-term-find "toggle-term-vterm" 'vterm)))
 
-(defun toggle-term-eat ()
-  "Spawn a toggle-term eat."
-  (interactive)
-  (if (featurep 'eat)
-      (toggle-term-find "toggle-term-eat" 'eat)
-      (message "Eat not found")))
+(with-eval-after-load 'eat
+	(defun toggle-term-eat ()
+		"Spawn a toggle-term eat."
+		(interactive)
+		(toggle-term-find "toggle-term-eat" 'eat)))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
