@@ -2,7 +2,7 @@
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
-;; Version: 1.1
+;; Version: 1.2
 ;; Keywords: frames convenience terminals
 ;; Package-Requires: ((emacs "25.1"))
 ;;
@@ -51,22 +51,26 @@
   :type 'boolean
   :group 'toggle-term)
 
+(defcustom toggle-term-spawn-hook nil
+  "A hook that is run after toggle term spawns a window."
+  :type 'hook
+  :group 'toggle-term)
+
+(defcustom toggle-term-close-hook nil
+  "A hook that is run after toggle term closes a window."
+  :type 'hook
+  :group 'toggle-term)
+
 (defvar toggle-term--active-toggles nil
-  "Active toggles spawned by toggle-term.")
-
-(defvar toggle-term-spawn-hook nil
-  "A hook that is run after toggle term spawns a window")
-
-(defvar toggle-term-close-hook nil
-  "A hook that is run after toggle term closes a window")
+  "Nested alist of active toggles spawned by toggle-term.")
 
 (defun toggle-term--get-last-used ()
   "Get the last used toggle term alist."
   (car (delq nil (mapcar #'(lambda (tog)
     (when (and (cdr (assoc 'last-used (cdr tog)))
                (if toggle-term-use-persp
-                   (string= (persp-current-name) (cdr (assoc 'persp (cdr tog)))) t))
-                   tog)) toggle-term--active-toggles))))
+                   (string= (persp-current-name) (cdr (assoc 'persp (cdr tog)))) t)) tog))
+    toggle-term--active-toggles))))
 
 (defun toggle-term--set-last-used (wrapped type)
   "Set the last used toggle term.
@@ -129,11 +133,10 @@ Argument TYPE type of toggle (term, shell, etc)."
   "Toggle a toggle-term buffer, or create a new one.
 
 If NAME is provided, set the buffer's
-name to NAME, otherwise prompt for one.
+name, otherwise prompt for one.
 
-If TYPE is provided, set the buffer's type
-\(term, vterm, shell, eshell, ielm, eat)
-to TYPE, otherwise prompt for one."
+If TYPE is provided, set the buffer's type (term, shell, etc),
+otherwise prompt for one."
   (interactive)
   (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
            (when (member (car buf) (mapcar #'car toggle-term--active-toggles))
