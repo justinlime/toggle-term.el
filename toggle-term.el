@@ -142,15 +142,16 @@ name, otherwise prompt for one.
 If TYPE is provided, set the buffer's type (term, shell, etc),
 otherwise prompt for one."
   (interactive)
-  (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
-           (when (member (car buf) (mapcar #'car toggle-term--active-toggles))
-                 (if toggle-term-use-persp
-                   (when (member (get-buffer (car buf)) (persp-buffers (persp-curr))) t) t))))))
+  (let* ((name (or name (completing-read "Name of toggle:" (delq nil (mapcar #'(lambda (tog)
+           (if (and toggle-term-use-persp
+               (member (get-buffer (car tog)) (persp-buffers (persp-curr))))
+               (car tog)
+               (car tog))) toggle-term--active-toggles)))))
          (wrapped (if (member name (mapcar #'car toggle-term--active-toggles))
                       name
                       (if toggle-term-use-persp
-                        (format "*%s-%s*" name (persp-current-name))
-                        (format "*%s*" name))))
+                        (format " *%s-%s*" name (persp-current-name))
+                        (format " *%s*" name))))
          (last-used (toggle-term--get-last-used))
          (windows (delete-dups (delq nil (mapcar #'(lambda (tog) (get-buffer-window (car tog))) toggle-term--active-toggles))))
          (type (or type (or (cdr (assoc wrapped toggle-term--active-toggles))
