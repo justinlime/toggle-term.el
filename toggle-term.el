@@ -191,34 +191,34 @@ the user to choose a name and type."
 (defun toggle-term-term ()
   "Spawn a toggle-term term."
   (interactive)
-  (toggle-term-find "toggle-term-term" 'term))
+  (toggle-term-find "toggle-term-term" "term"))
 
 (with-eval-after-load 'vterm
 	(defun toggle-term-vterm ()
 		"Spawn a toggle-term vterm."
 		(interactive)
-		(toggle-term-find "toggle-term-vterm" 'vterm)))
+		(toggle-term-find "toggle-term-vterm" "vterm")))
 
 (with-eval-after-load 'eat
 	(defun toggle-term-eat ()
 		"Spawn a toggle-term eat."
 		(interactive)
-		(toggle-term-find "toggle-term-eat" 'eat)))
+		(toggle-term-find "toggle-term-eat" "eat")))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
   (interactive)
-  (toggle-term-find "toggle-term-shell" 'shell))
+  (toggle-term-find "toggle-term-shell" "shell"))
 
 (defun toggle-term-eshell ()
   "Spawn a toggle-term eshell."
   (interactive)
-  (toggle-term-find "toggle-term-eshell" 'eshell))
+  (toggle-term-find "toggle-term-eshell" "eshell"))
 
 (defun toggle-term-ielm ()
   "Spawn a toggle-term ielm."
   (interactive)
-  (toggle-term-find "toggle-term-ielm" 'ielm))
+  (toggle-term-find "toggle-term-ielm" "ielm"))
 
 (provide 'toggle-term)
 
