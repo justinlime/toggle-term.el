@@ -61,6 +61,10 @@
   :type 'hook
   :group 'toggle-term)
 
+(defvar toggle-term-init-toggle nil
+  "An predefined toggle-term for startup, invoked when using `toggle-term-toggle'.
+Set to a cons cell, of NAME and TYPE, such as '(\"init-toggle-name\" . \"term\")")
+
 (defvar toggle-term--active-toggles nil
   "Nested alist of active toggles spawned by toggle-term.")
 
@@ -121,7 +125,7 @@ Argument TYPE type of toggle (term, shell, etc)."
 				("ielm" (ielm wrapped))
 				("eshell" (eshell) (setq-local eshell-buffer-name wrapped))))
     (toggle-term--set-last-used wrapped type)
-    ;; ;; Ensure the buffer is renamed properly
+    ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
     (when toggle-term-use-persp
@@ -169,17 +173,19 @@ Invokes `toggle-term-find', and provides it with necessary arguments unless
 the user to choose a name and type."
   (interactive)
   (let* ((last-used (toggle-term--get-last-used))
-        (name (car last-used))
-        (type (alist-get 'type (cdr last-used)))
-        (persp (alist-get 'persp (cdr last-used))))
+         (name (car last-used))
+         (type (alist-get 'type (cdr last-used)))
+         (persp (alist-get 'persp (cdr last-used)))
+         (init (when (and toggle-term-init-toggle (not toggle-term--active-toggles))
+                 #'(lambda () (toggle-term-find (car toggle-term-init-toggle) (cdr toggle-term-init-toggle))))))
     (if last-used
       (progn
         (if toggle-term-use-persp
           (if (string= (persp-current-name) persp)
             (toggle-term-find name type)
-            (toggle-term-find))
+            (if init (funcall init) (toggle-term-find)))
           (toggle-term-find name type)))
-      (toggle-term-find))))
+      (if init (funcall init) (toggle-term-find)))))
 
 ;; Helpers
 (defun toggle-term-term ()
