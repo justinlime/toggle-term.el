@@ -94,15 +94,23 @@ upon spawning:
 #+begin_src emacs-lisp
 (setq toggle-term-switch-upon-toggle t)
 #+end_src
-+ =toggle-term-last-used= ::
 
-This variable is how toggle-term knows which toggle to summon/close
-when using =toggle-term-toggle=. You can set this variable before
-invoking the function to have a default startup toggle:
++ =toggle-term-use-persp= ::
+  
+Optionally use perspective integration, automatically enabled 
+when persp-mode is enabled.
+#+begin_src emacs-lisp
+(setq toggle-term-use-persp t)
+#+end_src
+
++ =toggle-term-init-toggle= ::
+
+Optionally define an initial toggle that will be the first used
+when invoking =toggle-term-toggle=.
 #+begin_src emacs-lisp
 ;; '("name-of-toggle" . type-of-toggle)
-(setq toggle-term-last-used '("my-terminal" . term))
+(setq toggle-term-init-toggle '("my-terminal" . "term"))
 ;; or
-(setq toggle-term-last-used '("my-shell" . shell))
+(setq toggle-term-init-toggle '("my-shell" . "shell"))
 ;; etc
 #+end_src
