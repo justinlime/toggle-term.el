@@ -46,7 +46,7 @@
   :type 'boolean
   :group 'toggle-term)
 
-(defcustom toggle-term-use-persp (when (and (boundp persp-mode) (eq persp-mode t)) t)
+(defcustom toggle-term-use-persp (when (and (boundp 'persp-mode) (eq persp-mode t)) t)
   "Whether or not to integrate with perspective.el."
   :type 'boolean
   :group 'toggle-term)
