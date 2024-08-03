@@ -46,7 +46,7 @@
   :type 'boolean
   :group 'toggle-term)
 
-(defcustom toggle-term-use-persp (when (and (boundp persp-mode) (eq persp-mode t)) t)
+(defcustom toggle-term-use-persp (when (and (boundp 'persp-mode) (eq persp-mode t)) t)
   "Whether or not to integrate with perspective.el."
   :type 'boolean
   :group 'toggle-term)
@@ -142,15 +142,16 @@ name, otherwise prompt for one.
 If TYPE is provided, set the buffer's type (term, shell, etc),
 otherwise prompt for one."
   (interactive)
-  (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
-           (when (member (car buf) (mapcar #'car toggle-term--active-toggles))
-                 (if toggle-term-use-persp
-                   (when (member (get-buffer (car buf)) (persp-buffers (persp-curr))) t) t))))))
+  (let* ((name (or name (completing-read "Name of toggle: " (delq nil (mapcar #'(lambda (tog)
+           (if toggle-term-use-persp
+             (when (member (get-buffer (car tog)) (persp-buffers (persp-curr)))
+                 (car tog)) 
+             (car tog))) toggle-term--active-toggles)))))
          (wrapped (if (member name (mapcar #'car toggle-term--active-toggles))
                       name
                       (if toggle-term-use-persp
-                        (format "*%s-%s*" name (persp-current-name))
-                        (format "*%s*" name))))
+                        (format " *%s-%s*" name (persp-current-name))
+                        (format " *%s*" name))))
          (last-used (toggle-term--get-last-used))
          (windows (delete-dups (delq nil (mapcar #'(lambda (tog) (get-buffer-window (car tog))) toggle-term--active-toggles))))
          (type (or type (or (cdr (assoc wrapped toggle-term--active-toggles))
@@ -191,34 +192,34 @@ the user to choose a name and type."
 (defun toggle-term-term ()
   "Spawn a toggle-term term."
   (interactive)
-  (toggle-term-find "toggle-term-term" 'term))
+  (toggle-term-find "toggle-term-term" "term"))
 
 (with-eval-after-load 'vterm
 	(defun toggle-term-vterm ()
 		"Spawn a toggle-term vterm."
 		(interactive)
-		(toggle-term-find "toggle-term-vterm" 'vterm)))
+		(toggle-term-find "toggle-term-vterm" "vterm")))
 
 (with-eval-after-load 'eat
 	(defun toggle-term-eat ()
 		"Spawn a toggle-term eat."
 		(interactive)
-		(toggle-term-find "toggle-term-eat" 'eat)))
+		(toggle-term-find "toggle-term-eat" "eat")))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
   (interactive)
-  (toggle-term-find "toggle-term-shell" 'shell))
+  (toggle-term-find "toggle-term-shell" "shell"))
 
 (defun toggle-term-eshell ()
   "Spawn a toggle-term eshell."
   (interactive)
-  (toggle-term-find "toggle-term-eshell" 'eshell))
+  (toggle-term-find "toggle-term-eshell" "eshell"))
 
 (defun toggle-term-ielm ()
   "Spawn a toggle-term ielm."
   (interactive)
-  (toggle-term-find "toggle-term-ielm" 'ielm))
+  (toggle-term-find "toggle-term-ielm" "ielm"))
 
 (provide 'toggle-term)
 
