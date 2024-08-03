@@ -2,9 +2,9 @@
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
-;; Version: 0.0.1
+;; Version: 1.2
 ;; Keywords: frames convenience terminals
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "25.1"))
 ;;
 ;;; License
 ;; This file is not part of GNU Emacs.
@@ -46,15 +46,64 @@
   :type 'boolean
   :group 'toggle-term)
 
-(defvar toggle-term-active-toggles nil
-  "Active toggles spawned by toggle-term.")
+(defcustom toggle-term-use-persp (when (and (boundp persp-mode) (eq persp-mode t)) t)
+  "Whether or not to integrate with perspective.el."
+  :type 'boolean
+  :group 'toggle-term)
 
-(defvar toggle-term-last-used nil
-  "The current active toggle to be targeted by `toggle-term-toggle'.")
+(defcustom toggle-term-spawn-hook nil
+  "A hook that is run after toggle term spawns a window."
+  :type 'hook
+  :group 'toggle-term)
+
+(defcustom toggle-term-close-hook nil
+  "A hook that is run after toggle term closes a window."
+  :type 'hook
+  :group 'toggle-term)
+
+(defvar toggle-term-init-toggle nil
+  "An predefined toggle-term for startup, invoked when using `toggle-term-toggle'.
+Set to a cons cell, of NAME and TYPE, such as '(\"init-toggle-name\" . \"term\")")
+
+(defvar toggle-term--active-toggles nil
+  "Nested alist of active toggles spawned by toggle-term.")
+
+(defun toggle-term--get-last-used ()
+  "Get the last used toggle term alist."
+  (car (delq nil (mapcar #'(lambda (tog)
+    (when (and (cdr (assoc 'last-used (cdr tog)))
+               (if toggle-term-use-persp
+                   (string= (persp-current-name) (cdr (assoc 'persp (cdr tog)))) t)) tog))
+    toggle-term--active-toggles))))
+
+(defun toggle-term--set-last-used (wrapped type)
+  "Set the last used toggle term.
+Argument WRAPPED the name, wrapped in asterisks
+Argument TYPE type of toggle (term, shell, etc)."
+  ;; Unset the last used toggle
+  (mapcar #'(lambda (tog)
+    (if toggle-term-use-persp
+      (when (string= (persp-current-name) (cdr (assoc 'persp (cdr tog))))
+        (setcdr (assoc 'last-used (cdr tog)) nil))
+      (setcdr (assoc 'last-used (cdr tog)) nil))) toggle-term--active-toggles)
+  ;; Set the new active toggle term
+  (unless (car (delq nil (mapcar #'(lambda (tog)
+            (when (string= (car tog) wrapped)
+              (setcdr (assoc 'last-used (cdr tog)) t)
+              (when toggle-term-use-persp
+                (setcdr (assoc 'persp (cdr tog)) (persp-current-name))))) toggle-term--active-toggles)))
+    ;; Add to or create the active `toggle-term--active-toggles' alist
+    (if toggle-term--active-toggles
+      ; the t's are intetionally evaluated, leaving them quoted has weird side affects
+      (add-to-list 'toggle-term--active-toggles `(,wrapped . ((type . ,type)
+                                                              (last-used . ,t)
+                                                              (persp . ,(when toggle-term-use-persp (persp-current-name))))))
+      (setq toggle-term--active-toggles `((,wrapped . ((type . ,type)
+                                                       (last-used . ,t)
+                                                       (persp . ,(when toggle-term-use-persp (persp-current-name))))))))))
 
 (defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
-Argument NAME name of the toggle buffer.
 Argument WRAPPED the name, wrapped with asterisks.
 Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
@@ -62,67 +111,81 @@ Argument TYPE type of toggle (term, shell, etc)."
          (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
 
     (select-window (split-root-window-below size))
-    (if (member wrapped (mapcar #'buffer-name (buffer-list)))
-      (switch-to-buffer wrapped)
-      (cond
-        ((string= type 'term)
-           ;; `make-term' doesn't switch to the buffer automatically
-           (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
-        ((string= type 'vterm)
-           (vterm))
-        ((string= type 'eat)
-           (set-buffer (eat)))
-        ((string= type 'shell)
-           (shell wrapped))
-        ((string= type 'ielm)
-           (ielm wrapped))
-        ((string= type 'eshell)
-           (eshell)
-           (setq-local eshell-buffer-name wrapped)))
-      (if toggle-term-active-toggles
-        (add-to-list 'toggle-term-active-toggles `(,wrapped . ,type))
-        (setq toggle-term-active-toggles `((,wrapped . ,type)))))
-    (setq toggle-term-last-used `(,wrapped . ,type))
+    (if (member wrapped (mapcar #'car toggle-term--active-toggles))
+      (progn
+        (switch-to-buffer wrapped)
+        (when toggle-term-use-persp
+          (persp-set-buffer wrapped))
+        (run-hooks 'toggle-term-spawn-hook))
+			(pcase type
+				("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
+				("vterm" (vterm))
+				("eat" (set-buffer (eat)))
+				("shell" (shell wrapped))
+				("ielm" (ielm wrapped))
+				("eshell" (eshell) (setq-local eshell-buffer-name wrapped))))
+    (toggle-term--set-last-used wrapped type)
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
-    (unless toggle-term-switch-upon-toggle (select-window current))))
+    (when toggle-term-use-persp
+      (persp-set-buffer wrapped))
+    (unless toggle-term-switch-upon-toggle (select-window current))
+    (run-hooks 'toggle-term-spawn-hook)))
 
 (defun toggle-term-find (&optional name type)
-  "Toggle a buffer spawned by toggle-term, or create a new one.
+  "Toggle a toggle-term buffer, or create a new one.
 
 If NAME is provided, set the buffer's
-name to NAME, otherwise prompt for one.
+name, otherwise prompt for one.
 
-If TYPE is provided, set the buffer's type (term, vterm, shell, eshell, ielm)
-to TYPE, otherwise prompt for one."
+If TYPE is provided, set the buffer's type (term, shell, etc),
+otherwise prompt for one."
   (interactive)
-  (let* ((name (if name name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
-           (when (member (car buf) (mapcar #'car toggle-term-active-toggles)) (car buf))))))
-         (last (car toggle-term-last-used))
-         (win (get-buffer-window last))
-         (wrapped (format "*%s*" (replace-regexp-in-string "\\*" "" name)))
-         (type-options (delete nil (mapcar #'(lambda (type) (when (fboundp type) type)) '(term vterm eat eshell ielm shell))))
-         (type (if type type (if (assoc wrapped toggle-term-active-toggles)
-                               (cdr (assoc wrapped toggle-term-active-toggles))
-                               (completing-read "Type of toggle: " type-options nil t)))))
-
-    (if (or (not last)
-            (not win))
+  (let* ((name (or name (read-buffer "Name of toggle: " nil nil #'(lambda (buf)
+           (when (member (car buf) (mapcar #'car toggle-term--active-toggles))
+                 (if toggle-term-use-persp
+                   (when (member (get-buffer (car buf)) (persp-buffers (persp-curr))) t) t))))))
+         (wrapped (if (member name (mapcar #'car toggle-term--active-toggles))
+                      name
+                      (if toggle-term-use-persp
+                        (format "*%s-%s*" name (persp-current-name))
+                        (format "*%s*" name))))
+         (last-used (toggle-term--get-last-used))
+         (windows (delete-dups (delq nil (mapcar #'(lambda (tog) (get-buffer-window (car tog))) toggle-term--active-toggles))))
+         (type (or type (or (cdr (assoc wrapped toggle-term--active-toggles))
+                            (completing-read "Type of toggle: "
+                              (delq nil (mapcar #'(lambda (type)
+                               (when (fboundp type) type)) '(term vterm eat eshell ielm shell))) nil t)))))
+    (if (or (not last-used)
+            (not windows))
         (toggle-term--spawn wrapped type)
-        (when win (delete-window win))
-        (unless (string= last wrapped)
+        (when windows
+          (mapcar #'delete-window windows)
+          (run-hooks 'toggle-term-close-hook))
+        (unless (string= (car last-used) wrapped)
           (toggle-term--spawn wrapped type)))))
 
 (defun toggle-term-toggle ()
   "Toggle the last used buffer spawned by toggle-term.
 Invokes `toggle-term-find', and provides it with necessary arguments unless
-`toggle-term-last-used' is nil, in which case `toggle-term-find' will prompt
+`toggle-term--last-used' is nil, in which case `toggle-term-find' will prompt
 the user to choose a name and type."
   (interactive)
-  (if toggle-term-last-used
-    (toggle-term-find (car toggle-term-last-used) (cdr toggle-term-last-used))
-    (toggle-term-find)))
+  (let* ((last-used (toggle-term--get-last-used))
+         (name (car last-used))
+         (type (alist-get 'type (cdr last-used)))
+         (persp (alist-get 'persp (cdr last-used)))
+         (init (when (and toggle-term-init-toggle (not toggle-term--active-toggles))
+                 #'(lambda () (toggle-term-find (car toggle-term-init-toggle) (cdr toggle-term-init-toggle))))))
+    (if last-used
+      (progn
+        (if toggle-term-use-persp
+          (if (string= (persp-current-name) persp)
+            (toggle-term-find name type)
+            (if init (funcall init) (toggle-term-find)))
+          (toggle-term-find name type)))
+      (if init (funcall init) (toggle-term-find)))))
 
 ;; Helpers
 (defun toggle-term-term ()
@@ -130,19 +193,17 @@ the user to choose a name and type."
   (interactive)
   (toggle-term-find "toggle-term-term" 'term))
 
-(defun toggle-term-vterm ()
-  "Spawn a toggle-term vterm."
-  (interactive)
-  (if (fboundp 'vterm)
-      (toggle-term-find "toggle-term-vterm" 'vterm)
-      (message "Vterm not found")))
+(with-eval-after-load 'vterm
+	(defun toggle-term-vterm ()
+		"Spawn a toggle-term vterm."
+		(interactive)
+		(toggle-term-find "toggle-term-vterm" 'vterm)))
 
-(defun toggle-term-eat ()
-  "Spawn a toggle-term eat."
-  (interactive)
-  (if (fboundp 'eat)
-      (toggle-term-find "toggle-term-eat" 'eat)
-      (message "Eat not found")))
+(with-eval-after-load 'eat
+	(defun toggle-term-eat ()
+		"Spawn a toggle-term eat."
+		(interactive)
+		(toggle-term-find "toggle-term-eat" 'eat)))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
