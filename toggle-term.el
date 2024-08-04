@@ -117,13 +117,13 @@ Argument TYPE type of toggle (term, shell, etc)."
         (when toggle-term-use-persp
           (persp-set-buffer wrapped))
         (run-hooks 'toggle-term-spawn-hook))
-			(pcase type
-				("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
-				("vterm" (vterm))
-				("eat" (set-buffer (eat)))
-				("shell" (shell wrapped))
-				("ielm" (ielm wrapped))
-				("eshell" (eshell) (setq-local eshell-buffer-name wrapped))))
+      (pcase type
+        ("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
+        ("vterm" (vterm))
+        ("eat" (set-buffer (eat)))
+        ("shell" (shell wrapped))
+        ("ielm" (ielm wrapped))
+        ("eshell" (eshell) (setq-local eshell-buffer-name wrapped))))
     (toggle-term--set-last-used wrapped type)
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
@@ -195,16 +195,16 @@ the user to choose a name and type."
   (toggle-term-find "toggle-term-term" "term"))
 
 (with-eval-after-load 'vterm
-	(defun toggle-term-vterm ()
-		"Spawn a toggle-term vterm."
-		(interactive)
-		(toggle-term-find "toggle-term-vterm" "vterm")))
+  (defun toggle-term-vterm ()
+    "Spawn a toggle-term vterm."
+    (interactive)
+    (toggle-term-find "toggle-term-vterm" "vterm")))
 
 (with-eval-after-load 'eat
-	(defun toggle-term-eat ()
-		"Spawn a toggle-term eat."
-		(interactive)
-		(toggle-term-find "toggle-term-eat" "eat")))
+  (defun toggle-term-eat ()
+    "Spawn a toggle-term eat."
+    (interactive)
+    (toggle-term-find "toggle-term-eat" "eat")))
 
 (defun toggle-term-shell ()
   "Spawn a toggle-term shell."
