@@ -41,6 +41,14 @@
   :type 'fixnum
   :group 'toggle-term)
 
+(defcustom toggle-term-side 'bottom
+  "Side of the toggle."
+  :type '(choice (const left)
+                 (const right)
+                 (const top)
+                 (const bottom))
+  :group 'toggle-term)
+
 (defcustom toggle-term-switch-upon-toggle t
   "Whether or not to switch to the buffer upon toggle."
   :type 'boolean
@@ -102,15 +110,25 @@ Argument TYPE type of toggle (term, shell, etc)."
                                                        (last-used . ,t)
                                                        (persp . ,(when toggle-term-use-persp (persp-current-name))))))))))
 
+(defun toggle-term--display-buffer (buffer)
+  "Display a given BUFFER."
+  ; for backwards compat
+  (let ((size (/ toggle-term-size 100.0)))
+    (display-buffer-in-side-window buffer
+      `((side . ,toggle-term-side)
+        (window-height . ,size)
+        (window-width . ,size)
+        (preserve-size . (t . nil))))
+    (set-window-dedicated-p (select-window (get-buffer-window buffer)) nil)))
+
 (defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
 Argument WRAPPED the name, wrapped with asterisks.
 Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
-         (current (selected-window))
-         (size (round (* height (- 1 (/ toggle-term-size 100.0))))))
-
-    (select-window (split-root-window-below size))
+         (temp-buffer (get-buffer-create " temp-toggle-term-buffer"))
+         (current (selected-window)))
+    (toggle-term--display-buffer temp-buffer)
     (if (member wrapped (mapcar #'car toggle-term--active-toggles))
       (progn
         (switch-to-buffer wrapped)
