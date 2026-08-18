@@ -2,7 +2,7 @@
 ;;
 ;; Author: justinlime
 ;; URL: https://github.com/justinlime/toggle-term.el
-;; Version: 1.2
+;; Version: 1.3
 ;; Keywords: frames convenience terminals
 ;; Package-Requires: ((emacs "25.1"))
 ;;
@@ -25,18 +25,18 @@
 ;; Boston, MA 02111-1307, USA.
 ;;
 ;;; Commentary:
-;; toggle-term.el allows you to quickly spawn persistent `term', `vterm',
-;; `eat', `shell', `eshell', or `ielm' instances on the fly in an
+;; toggle-term.el allows you to quickly spawn persistent `term', `ghostel',
+;; `vterm', `eat', `shell', `eshell', or `ielm' instances on the fly in an
 ;; unobstructive way.
 ;;
 ;;; Code:
 
 (defgroup toggle-term nil
-  "Toggle a `term', `vterm', `eat', `shell', `eshell', or `ielm' buffer."
+  "Toggle a `term', `vterm', `ghostel', `eat', `shell', `eshell', or `ielm' buffer."
   :prefix "toggle-term-"
   :group 'applications)
 
-(defcustom toggle-term-size 22
+(defcustom toggle-term-size 40
   "Percentage of the window that the toggle-term buffer occupies."
   :type 'fixnum
   :group 'toggle-term)
@@ -121,6 +121,14 @@ Argument TYPE type of toggle (term, shell, etc)."
         (preserve-size . (t . nil))))
     (set-window-dedicated-p (select-window (get-buffer-window buffer)) nil)))
 
+(defun toggle-term--cleanup-active-toggle ()
+  "Remove this buffer's entry from `toggle-term--active-toggles' when killed,
+so a dead toggle buffer can't be mistaken for a live one."
+  (let ((entry (assoc (buffer-name) toggle-term--active-toggles)))
+    (when entry
+      (setq toggle-term--active-toggles (delq entry toggle-term--active-toggles)))))
+
+
 (defun toggle-term--spawn (wrapped type)
   "Handles the spawning of a toggle.
 Argument WRAPPED the name, wrapped with asterisks.
@@ -129,7 +137,8 @@ Argument TYPE type of toggle (term, shell, etc)."
          (temp-buffer (get-buffer-create " temp-toggle-term-buffer"))
          (current (selected-window)))
     (toggle-term--display-buffer temp-buffer)
-    (if (member wrapped (mapcar #'car toggle-term--active-toggles))
+    ;; (if (member wrapped (mapcar #'car toggle-term--active-toggles))
+    (if (buffer-live-p (get-buffer wrapped))
       (progn
         (switch-to-buffer wrapped)
         (when toggle-term-use-persp
@@ -138,6 +147,7 @@ Argument TYPE type of toggle (term, shell, etc)."
       (pcase type
         ("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
         ("vterm" (vterm))
+        ("ghostel" (ghostel))
         ("eat" (set-buffer (eat)))
         ("shell" (shell wrapped))
         ("ielm" (ielm wrapped))
@@ -146,6 +156,7 @@ Argument TYPE type of toggle (term, shell, etc)."
     ;; Ensure the buffer is renamed properly
     (unless (eq (buffer-name) wrapped)
       (rename-buffer wrapped))
+    (add-hook 'kill-buffer-hook #'toggle-term--cleanup-active-toggle nil t)
     (when toggle-term-use-persp
       (persp-set-buffer wrapped))
     (unless toggle-term-switch-upon-toggle (select-window current))
@@ -175,7 +186,7 @@ otherwise prompt for one."
          (type (or type (or (cdr (assoc wrapped toggle-term--active-toggles))
                             (completing-read "Type of toggle: "
                               (delq nil (mapcar #'(lambda (type)
-                               (when (fboundp type) type)) '(term vterm eat eshell ielm shell))) nil t)))))
+                               (when (fboundp type) type)) '(term vterm ghostel eat eshell ielm shell))) nil t)))))
     (if (or (not last-used)
             (not windows))
         (toggle-term--spawn wrapped type)
@@ -217,6 +228,12 @@ the user to choose a name and type."
     "Spawn a toggle-term vterm."
     (interactive)
     (toggle-term-find "toggle-term-vterm" "vterm")))
+
+(with-eval-after-load 'ghostel
+  (defun toggle-term-ghostel ()
+    "Spawn a toggle-term ghostel."
+    (interactive)
+    (toggle-term-find "toggle-term-ghostel" "ghostel")))
 
 (with-eval-after-load 'eat
   (defun toggle-term-eat ()
