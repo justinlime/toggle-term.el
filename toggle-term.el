@@ -36,9 +36,37 @@
   :prefix "toggle-term-"
   :group 'applications)
 
+(defface toggle-term-name-face
+  '((((class color) (background dark)) :foreground "SkyBlue")
+    (((class color) (background light)) :foreground "Blue")
+    (t :inherit default))
+  "Face used for the toggle name in completion candidates.
+Bright blue on dark backgrounds, dark blue on light ones."
+  :group 'toggle-term)
+
+(defface toggle-term-type-face
+  '((((class color) (background dark)) :foreground "SpringGreen")
+    (((class color) (background light)) :foreground "ForestGreen")
+    (t :inherit default))
+  "Face used for the toggle type column in the marginalia annotation.
+Shows the type (term, vterm, ghostel, ...) of each toggle in green."
+  :group 'toggle-term)
+
 (defcustom toggle-term-size 40
   "Percentage of the window that the toggle-term buffer occupies."
   :type 'fixnum
+  :group 'toggle-term)
+
+(defcustom toggle-term-remember-resize t
+  "Whether to remember the toggle window's size when it is hidden.
+When non-nil, the size a toggle window had when it was hidden -- for
+example after being resized by the user while it was open -- is
+remembered and reapplied when the toggle is shown again.  The size is
+remembered per toggle buffer and per side (`toggle-term-side'), so
+toggles that were sized differently each restore their own.
+When nil, the window is always (re)created sized
+according to `toggle-term-size'."
+  :type 'boolean
   :group 'toggle-term)
 
 (defcustom toggle-term-side 'bottom
@@ -110,15 +138,59 @@ Argument TYPE type of toggle (term, shell, etc)."
                                                        (last-used . ,t)
                                                        (persp . ,(when toggle-term-use-persp (persp-current-name))))))))))
 
-(defun toggle-term--display-buffer (buffer)
-  "Display a given BUFFER."
-  ; for backwards compat
-  (let ((size (/ toggle-term-size 100.0)))
-    (display-buffer-in-side-window buffer
-      `((side . ,toggle-term-side)
-        (window-height . ,size)
-        (window-width . ,size)
-        (preserve-size . (t . nil))))
+(defun toggle-term--remember-window-size (window)
+  "Remember WINDOW's size before it is hidden.
+Stores the size in the toggle's `toggle-term--active-toggles' entry
+under a `saved-size' key, as (SIDE . SIZE).  SIZE is in lines for
+top/bottom sides and columns for left/right sides, and SIDE is the
+`toggle-term-side' in effect at hide time, so a changed side on
+re-open falls back to `toggle-term-size'.
+
+Only acts when `toggle-term-remember-resize' is non-nil."
+  (when toggle-term-remember-resize
+    (let* ((buffer-name (buffer-name (window-buffer window)))
+           (entry (assoc buffer-name toggle-term--active-toggles)))
+      (when entry
+        (let* ((props (cdr entry))
+               (old (assq 'saved-size props))
+               (size (if (memq toggle-term-side '(top bottom))
+                         (window-total-height window)
+                       (window-total-width window))))
+          (if old
+              (setcdr old (cons toggle-term-side size))
+            (setcdr entry (cons (cons 'saved-size (cons toggle-term-side size))
+                                props))))))))
+
+(defun toggle-term--saved-window-size (name)
+  "Return the remembered size for toggle NAME, or nil.
+Only returns a size when `toggle-term-remember-resize' is non-nil and
+the size was saved for the current `toggle-term-side'."
+  (when toggle-term-remember-resize
+    (let* ((entry (assoc name toggle-term--active-toggles))
+           (saved (cdr (assq 'saved-size (cdr entry)))))
+      (and saved
+           (eq (car saved) toggle-term-side)
+           (cdr saved)))))
+
+(defun toggle-term--display-buffer (buffer &optional size)
+  "Display a given BUFFER.
+SIZE, when non-nil, is an absolute size for the window: a number of
+lines for top/bottom sides, or a number of columns for left/right
+sides.  When nil, the window is sized from `toggle-term-size' (a
+fraction of the frame)."
+  (let* ((size (or size (/ toggle-term-size 100.0)))
+         (size-spec
+          (if (integerp size)
+              `((side . ,toggle-term-side)
+                (preserve-size . (t . nil))
+                (,(if (memq toggle-term-side '(top bottom))
+                      'window-height 'window-width)
+                 . ,size))
+            `((side . ,toggle-term-side)
+              (window-height . ,size)
+              (window-width . ,size)
+              (preserve-size . (t . nil))))))
+    (display-buffer-in-side-window buffer size-spec)
     (set-window-dedicated-p (select-window (get-buffer-window buffer)) nil)))
 
 (defun toggle-term--cleanup-active-toggle ()
@@ -135,8 +207,9 @@ Argument WRAPPED the name, wrapped with asterisks.
 Argument TYPE type of toggle (term, shell, etc)."
   (let* ((height (window-total-height))
          (temp-buffer (get-buffer-create " temp-toggle-term-buffer"))
-         (current (selected-window)))
-    (toggle-term--display-buffer temp-buffer)
+         (current (selected-window))
+         (size (toggle-term--saved-window-size wrapped)))
+    (toggle-term--display-buffer temp-buffer size)
     (if (member wrapped (mapcar #'car toggle-term--active-toggles))
     ;; (if (buffer-live-p (get-buffer wrapped))
       (progn
@@ -171,11 +244,17 @@ name, otherwise prompt for one.
 If TYPE is provided, set the buffer's type (term, shell, etc),
 otherwise prompt for one."
   (interactive)
-  (let* ((name (or name (completing-read "Name of toggle: " (delq nil (mapcar #'(lambda (tog)
-           (if toggle-term-use-persp
-             (when (member (get-buffer (car tog)) (persp-buffers (persp-curr)))
-                 (car tog)) 
-             (car tog))) toggle-term--active-toggles)))))
+  (let* ((name (substring-no-properties
+                (or name
+                    (completing-read
+                     "Name of toggle: "
+                     (delq nil (mapcar #'(lambda (tog)
+                        (let ((cand (car tog)))
+                          (when (if toggle-term-use-persp
+                                    (member (get-buffer cand) (persp-buffers (persp-curr)))
+                                  t)
+                            (propertize cand 'face 'toggle-term-name-face))))
+                              toggle-term--active-toggles))))))
          (wrapped (if (member name (mapcar #'car toggle-term--active-toggles))
                       name
                       (if toggle-term-use-persp
@@ -191,6 +270,8 @@ otherwise prompt for one."
             (not windows))
         (toggle-term--spawn wrapped type)
         (when windows
+          (when toggle-term-remember-resize
+            (mapc #'toggle-term--remember-window-size windows))
           (mapcar #'delete-window windows)
           (run-hooks 'toggle-term-close-hook))
         (unless (string= (car last-used) wrapped)
@@ -255,6 +336,34 @@ the user to choose a name and type."
   "Spawn a toggle-term ielm."
   (interactive)
   (toggle-term-find "toggle-term-ielm" "ielm"))
+
+(defun toggle-term--marginalia-annotate (cand)
+  "Annotate toggle-term candidate CAND with its toggle type.
+Returns a string with a space-aligned column showing the toggle's
+type (term, vterm, ghostel, ...) in `toggle-term-type-face'."
+  (let* ((entry (assoc cand toggle-term--active-toggles))
+         (type (alist-get 'type (cdr entry))))
+    (when type
+      ;; Leading space marked for marginalia's column alignment, the
+      ;; separator, then the green type.
+      (concat (propertize " " 'marginalia--align t)
+              (or (bound-and-true-p marginalia-separator) " ")
+              (propertize type 'face 'toggle-term-type-face)))))
+
+(with-eval-after-load 'marginalia
+  ;; Let marginalia's prompt classifier map the toggle-term-find
+  ;; prompt to the `toggle-term' category.
+  (add-to-list 'marginalia-prompt-categories
+               '("\\<Name of toggle\\>" . toggle-term))
+  ;; Register the annotator for that category, preserving marginalia's
+  ;; entry shape ((CATEGORY ANNOTATORS... builtin)) and keeping the
+  ;; registration idempotent across re-evaluations.
+  (let ((entry (assq 'toggle-term marginalia-annotators)))
+    (if entry
+        (unless (memq #'toggle-term--marginalia-annotate (cdr entry))
+          (setcdr entry (cons #'toggle-term--marginalia-annotate (cdr entry))))
+      (push (list 'toggle-term #'toggle-term--marginalia-annotate 'builtin)
+            marginalia-annotators))))
 
 (provide 'toggle-term)
 
