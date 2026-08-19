@@ -137,8 +137,8 @@ Argument TYPE type of toggle (term, shell, etc)."
          (temp-buffer (get-buffer-create " temp-toggle-term-buffer"))
          (current (selected-window)))
     (toggle-term--display-buffer temp-buffer)
-    ;; (if (member wrapped (mapcar #'car toggle-term--active-toggles))
-    (if (buffer-live-p (get-buffer wrapped))
+    (if (member wrapped (mapcar #'car toggle-term--active-toggles))
+    ;; (if (buffer-live-p (get-buffer wrapped))
       (progn
         (switch-to-buffer wrapped)
         (when toggle-term-use-persp
@@ -147,7 +147,7 @@ Argument TYPE type of toggle (term, shell, etc)."
       (pcase type
         ("term" (switch-to-buffer (make-term wrapped (getenv "SHELL"))))
         ("vterm" (vterm))
-        ("ghostel" (ghostel))
+        ("ghostel" (ghostel t))
         ("eat" (set-buffer (eat)))
         ("shell" (shell wrapped))
         ("ielm" (ielm wrapped))
